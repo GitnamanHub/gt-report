@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Repair Estimator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Car Repair Estimator</h1>
+        <form id="estimator-form" class="mt-4">
+            <div class="form-group">
+                <label for="brand">Brand</label>
+                <select id="brand" class="form-control" required>
+                    <option value="Volkswagen">Volkswagen</option>
+                    <option value="Toyota">Toyota</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="car_type">Car Type</label>
+                <select id="car_type" class="form-control" required>
+                    <option value="SUV">SUV</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="Pickup Truck">Pickup Truck</option>
+                    <option value="Hatchback">Hatchback</option>
+                    <option value="MUV">MUV</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <input type="number" id="price" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="damage_type">Damage Type</label>
+                <select id="damage_type" class="form-control" required>
+                    <option value="Scratched">Scratched</option>
+                    <option value="Dented">Dented</option>
+                    <option value="Scratched and Dented">Scratched and Dented</option>
+                    <option value="Broken">Broken</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="severity">Severity</label>
+                <select id="severity" class="form-control" required>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="damaged_part">Damaged Part Name</label>
+                <input type="text" id="damaged_part" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Calculate</button>
+        </form>
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <script>
+        document.getElementById('estimator-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const brand = document.getElementById('brand').value;
+            const car_type = document.getElementById('car_type').value;
+            const price = document.getElementById('price').value;
+            const damage_type = document.getElementById('damage_type').value;
+            const severity = document.getElementById('severity').value;
+            const damaged_part = document.getElementById('damaged_part').value;
+
+            fetch('/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    brand: brand,
+                    car_type: car_type,
+                    price: price,
+                    damage_type: damage_type,
+                    damage_severity: severity, // Corrected to match Flask variable name
+                    damaged_part: damaged_part
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <p>Total Labour Time: ${data.total_labour_time.toFixed(2)} hours</p>
+                            <p>Total Paint Time: ${data.total_paint_time.toFixed(2)} hours</p>
+                            <p>Status: ${data.status}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
