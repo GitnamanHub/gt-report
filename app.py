@@ -1,24 +1,20 @@
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
 import requests
-from io import BytesIO
+from io import BytesIO, StringIO
 
 app = Flask(__name__)
 
 # Direct download URL from OneDrive
-file_url = 'https://1drv.ms/x/c/185d0f51f2993854/Ea1dzTL4gEVHkGR4Qt3tOYYBnocfBThpeuGvPMlvZcfzaw?e=ktpqXO'
-
+file_url = 'https://1drv.ms/x/c/185d0f51f2993854/EeTOxwQip9VEpQY5bbwMNHgBIuzeWq7DtUNobdfVfI6aaQ?e=2dgpsu'
 def load_data(file_url):
     try:
         # Download the Excel file from the URL
         response = requests.get(file_url)
         response.raise_for_status()  # Check if the request was successful
         
-        content_type = response.headers.get('content-type', '')
-        if 'excel' not in content_type.lower():
-            return None, None, None, "File is not an Excel file"
-        # Read the Excel file into a pandas DataFrame
-        data = pd.read_excel(BytesIO(response.content), engine='openpyxl')
+        # Read the CSV file into a pandas DataFrame
+        data = pd.read_csv(StringIO(response.text))
         
         # Fill NaN values in operation columns with zeros
         labour_columns = [col for col in data.columns if 'L Time' in col]
@@ -114,7 +110,6 @@ def calculate():
         return jsonify(error=error), 500
     
     total_labour_time, total_paint_time, status = calculate_times(data, labour_columns, paint_columns, car_type, price, damaged_part, damage_type, damage_severity)
-    return jsonify(total_labour_time=total_labour_time, total_paint_time=total_paint_time, status=status)
-
+    return jsonify(total_labour_time=int(total_labour_time), total_paint_time=int(total_paint_time), status=status)
 if __name__ == '__main__':
     app.run(debug=True)
