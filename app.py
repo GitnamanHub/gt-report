@@ -6,7 +6,7 @@ from io import BytesIO, StringIO
 app = Flask(__name__)
 
 # Direct download URL from OneDrive
-file_url = 'https://1drv.ms/x/c/185d0f51f2993854/EeTOxwQip9VEpQY5bbwMNHgBIuzeWq7DtUNobdfVfI6aaQ?e=2dgpsu'
+file_url ='https://tmpfiles.org/dl/9047788/first.csv'
 def load_data(file_url):
     try:
         # Download the Excel file from the URL
@@ -39,8 +39,8 @@ def calculate_times(data, labour_columns, paint_columns, car_type, price, damage
         (data['Price'] <= max_price) &
         (data['Car Type'].str.lower() == car_type) &
         (data['Severity'].str.lower() == damage_severity) &
-        (data['Part Name'].str.lower() == damaged_part) &
-        (data['Damage Type'].str.lower() == damage_type) 
+        (data['Damage Type'].str.lower() == damage_type) &
+        (data['Part Name'].str.lower() == damaged_part) 
     ]
     
     if filtered_data.empty:
@@ -50,7 +50,7 @@ def calculate_times(data, labour_columns, paint_columns, car_type, price, damage
             (data['Price'] <= max_price) &
             (data['Car Type'].str.lower() == car_type) &
             (data['Severity'].str.lower() == damage_severity) &
-            (data['Part Name'].str.lower() == damaged_part)
+            (data['Damage Type'].str.lower() == damage_type)
         ]
         
         if similar_data_1.empty:
