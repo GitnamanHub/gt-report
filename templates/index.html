@@ -12,24 +12,25 @@
         <form id="estimator-form" class="mt-4">
             <div class="form-group">
                 <label for="brand">Brand</label>
-                <select id="brand" class="form-control" required>
-                    <option value="Volkswagen">Volkswagen</option>
-                    <option value="Toyota">Toyota</option>
-                </select>
+                <input type="text" id="brand" class="form-control" required>
             </div>
             <div class="form-group">
                 <label for="car_type">Car Type</label>
                 <select id="car_type" class="form-control" required>
                     <option value="SUV">SUV</option>
                     <option value="Sedan">Sedan</option>
-                    <option value="Pickup Truck">Pickup Truck</option>
+                    <!-- <option value="Pickup Truck">Pickup Truck</option> -->
                     <option value="Hatchback">Hatchback</option>
-                    <option value="MUV">MUV</option>
+                    <!-- <option value="MUV">MUV</option> -->
                 </select>
             </div>
             <div class="form-group">
-                <label for="price">Price</label>
-                <input type="number" id="price" class="form-control" required>
+                <label for="price">Price (0-12->10, 13-30->20, Above 30->50)</label>
+                <select id="price" class="form-control" required>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="damage_type">Damage Type</label>
@@ -37,7 +38,7 @@
                     <option value="Scratched">Scratched</option>
                     <option value="Dented">Dented</option>
                     <option value="Scratched and Dented">Scratched and Dented</option>
-                    <option value="Broken">Broken</option>
+                    <!-- <option value="Broken">Broken</option> -->
                 </select>
             </div>
             <div class="form-group">
@@ -45,12 +46,34 @@
                 <select id="severity" class="form-control" required>
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
-                    <option value="High">High</option>
+                    <!-- <option value="High">High</option> -->
                 </select>
             </div>
             <div class="form-group">
                 <label for="damaged_part">Damaged Part Name</label>
-                <input type="text" id="damaged_part" class="form-control" required>
+                <select id="damaged_part" class="form-control" required>
+                    <option value="Fender (Driver side)">Fender (Driver side) {0.5,1,1}</option>
+                    <option value="Fender (Passenger side)">Fender (Passenger side) {0.5,1,1}</option>
+                    <option value="Front Bonnet">Front Bonnet {1,1,1.5}</option>
+                    <option value="Front Bumper">Front Bumper {1.5,2,2}</option>
+                    <option value="Front Door (Driver side)">Front Door (Driver side) {2,2.5,3}</option>
+                    <option value="Front Door (Passenger side)">Front Door (Passenger side) {2,2.5,3}</option>
+                    <option value="Boot">Boot {1,1,1.5}</option>
+                    <option value="Rear Bumper">Rear Bumper {1.5,2,2}</option>
+                    <option value="Rear Door (Driver side)">Rear Door (Driver side) {2,2.5,3}</option>
+                    <option value="Rear Door (Passenger side)">Rear Door (Passenger side) {2,2.5,3}</option>
+                    </select>
+            </div>
+            <div class="form-group">
+                <label for="area_code">Area Code</label>
+                <select id="area_code" class="form-control" required>
+                    <option value="0.5">0.5</option>
+                    <option value="1">1</option>
+                    <option value="1.5">1.5</option>
+                    <option value="2">2</option>
+                    <option value="2.5">2.5</option>
+                    <option value="3">3</option>
+                </select>
             </div>
             <button type="submit" class="btn btn-primary">Calculate</button>
         </form>
@@ -67,7 +90,8 @@
             const damage_type = document.getElementById('damage_type').value;
             const severity = document.getElementById('severity').value;
             const damaged_part = document.getElementById('damaged_part').value;
-
+            const area_code = document.getElementById('area_code').value;
+            
             fetch('/calculate', {
                 method: 'POST',
                 headers: {
@@ -79,7 +103,8 @@
                     price: price,
                     damage_type: damage_type,
                     damage_severity: severity, // Corrected to match Flask variable name
-                    damaged_part: damaged_part
+                    damaged_part: damaged_part,
+                    area_code: area_code
                 })
             })
             .then(response => response.json())
