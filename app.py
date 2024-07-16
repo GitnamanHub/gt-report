@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
 import requests
-from io import BytesIO, StringIO
+from io import StringIO
 
 app = Flask(__name__)
 
 # Direct download URL from OneDrive
-file_url ='https://tmpfiles.org/dl/9047788/first.csv'
+file_url ='https://tmpfiles.org/dl/9206840/menupricingrawdatafirst.csv'
 def load_data(file_url):
     try:
         # Download the Excel file from the URL
@@ -28,68 +28,81 @@ def load_data(file_url):
     except Exception as e:
         return None, None, None, str(e)
 
-def calculate_times(data, labour_columns, paint_columns, car_type, price, damaged_part, damage_type, damage_severity, price_range=5):
+def calculate_times(data, labour_columns, paint_columns, car_type, price, damaged_part, damage_type, damage_severity, area_code,price_range=0):
     # Define the price range
     min_price = price - price_range
     max_price = price + price_range
 
     # Filter data based on input parameters
     filtered_data = data[
-        (data['Price'] >= min_price) &
-        (data['Price'] <= max_price) &
-        (data['Car Type'].str.lower() == car_type) &
-        (data['Severity'].str.lower() == damage_severity) &
-        (data['Damage Type'].str.lower() == damage_type) &
-        (data['Part Name'].str.lower() == damaged_part) 
+        (data['price'] >= min_price) &
+        (data['price'] <= max_price) &
+        (data['car_type'].str.lower() == car_type) &
+        (data['damage_severity'].str.lower() == damage_severity) &
+        (data['damage_type'].str.lower() == damage_type) &
+        (data['area_code'] == area_code) &
+        (data['damaged_part'].str.lower() == damaged_part)
     ]
     
-    if filtered_data.empty:
-        # Estimation based on similar data if no exact match is found
-        similar_data_1 = data[
-            (data['Price'] >= min_price) &
-            (data['Price'] <= max_price) &
-            (data['Car Type'].str.lower() == car_type) &
-            (data['Severity'].str.lower() == damage_severity) &
-            (data['Damage Type'].str.lower() == damage_type)
-        ]
-        
-        if similar_data_1.empty:
-            similar_data_2 = data[
-                (data['Price'] >= min_price) &
-                (data['Price'] <= max_price) &
-                (data['Car Type'].str.lower() == car_type) &
-                (data['Severity'].str.lower() == damage_severity)
-            ]
-            
-            if similar_data_2.empty:
-                similar_data_3 = data[
-                    (data['Price'] >= min_price) &
-                    (data['Price'] <= max_price) &
-                    (data['Car Type'].str.lower() == car_type)
-                ]
-                
-                if similar_data_3.empty:
-                    return 0, 0, "Estimation needed. No similar data available for the given inputs."
-                    
-                # Calculate average labour time and paint time for similar data 3
-                total_labour_time = similar_data_3[labour_columns].sum(axis=1).mean()
-                total_paint_time = similar_data_3[paint_columns].sum(axis=1).mean()
-                return total_labour_time, total_paint_time, "Estimation based on similar data 3."
-                
-            # Calculate average labour time and paint time for similar data 2
-            total_labour_time = similar_data_2[labour_columns].sum(axis=1).mean()
-            total_paint_time = similar_data_2[paint_columns].sum(axis=1).mean()
-            return total_labour_time, total_paint_time, "Estimation based on similar data 2."
-        
-        # Calculate average labour time and paint time for similar data 1
+    # If filtered_data is not empty, calculate total labour and paint time for exact match
+    if not filtered_data.empty:
+        total_labour_time = filtered_data[labour_columns].sum(axis=1).values[0]
+        total_paint_time = filtered_data[paint_columns].sum(axis=1).values[0]
+        return total_labour_time, total_paint_time, "Exact match found."
+
+    # Estimation based on similar data if no exact match is found
+    similar_data_1 = data[
+        (data['price'] >= min_price) &
+        (data['price'] <= max_price) &
+        (data['car_type'].str.lower() == car_type) &
+        (data['damage_severity'].str.lower() == damage_severity) &
+        (data['damage_type'].str.lower() == damage_type) &
+        (data['area_code'] == area_code)
+    ]
+
+    if not similar_data_1.empty:
         total_labour_time = similar_data_1[labour_columns].sum(axis=1).mean()
         total_paint_time = similar_data_1[paint_columns].sum(axis=1).mean()
         return total_labour_time, total_paint_time, "Estimation based on similar data 1."
+
+    similar_data_2 = data[
+        (data['price'] >= min_price) &
+        (data['price'] <= max_price) &
+        (data['car_type'].str.lower() == car_type) &
+        (data['damage_severity'].str.lower() == damage_severity) &
+        (data['damage_type'].str.lower() == damage_type)
+    ]
+
+    if not similar_data_2.empty:
+        total_labour_time = similar_data_2[labour_columns].sum(axis=1).mean()
+        total_paint_time = similar_data_2[paint_columns].sum(axis=1).mean()
+        return total_labour_time, total_paint_time, "Estimation based on similar data 2."
+
+    similar_data_3 = data[
+        (data['price'] >= min_price) &
+        (data['price'] <= max_price) &
+        (data['car_type'].str.lower() == car_type) &
+        (data['damage_severity'].str.lower() == damage_severity)
+    ]
+
+    if not similar_data_3.empty:
+        total_labour_time = similar_data_3[labour_columns].sum(axis=1).mean()
+        total_paint_time = similar_data_3[paint_columns].sum(axis=1).mean()
+        return total_labour_time, total_paint_time, "Estimation based on similar data 3."
     
-    # Calculate total labour time and paint time
-    total_labour_time = filtered_data[labour_columns].sum(axis=1).values[0]
-    total_paint_time = filtered_data[paint_columns].sum(axis=1).values[0]
-    return total_labour_time, total_paint_time, "Exact match found."
+    similar_data_4 = data[
+        (data['price'] >= min_price) &
+        (data['price'] <= max_price) &
+        (data['car_type'].str.lower() == car_type)
+    ]
+
+    if not similar_data_4.empty:
+        total_labour_time = similar_data_4[labour_columns].sum(axis=1).mean()
+        total_paint_time = similar_data_4[paint_columns].sum(axis=1).mean()
+        return total_labour_time, total_paint_time, "Estimation based on similar data 4."
+
+    # If no similar data is found
+    return 0, 0, "No similar data available for the given inputs."
 
 @app.route('/')
 def home():
@@ -98,18 +111,20 @@ def home():
 @app.route('/calculate', methods=['POST'])
 def calculate():
     car_data = request.get_json()
-    car_type = car_data['car_type'].lower()
     price = float(car_data['price'])
     damaged_part = car_data['damaged_part'].lower()
     damage_type = car_data['damage_type'].lower()
     damage_severity = car_data['damage_severity'].lower()
+    car_type = car_data['car_type'].lower()
+    area_code = float(car_data['area_code'])
     
     # Load data dynamically
     data, labour_columns, paint_columns, error = load_data(file_url)
     if error:
         return jsonify(error=error), 500
     
-    total_labour_time, total_paint_time, status = calculate_times(data, labour_columns, paint_columns, car_type, price, damaged_part, damage_type, damage_severity)
+    total_labour_time, total_paint_time, status = calculate_times(data, labour_columns, paint_columns, car_type, price, damaged_part, damage_type, damage_severity, area_code)
     return jsonify(total_labour_time=int(total_labour_time), total_paint_time=int(total_paint_time), status=status)
+
 if __name__ == '__main__':
     app.run(debug=True)
