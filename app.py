@@ -6,7 +6,7 @@ from io import StringIO
 app = Flask(__name__)
 
 # Direct download URL from OneDrive
-file_url ='https://tmpfiles.org/dl/9206840/menupricingrawdatafirst.csv'
+file_url ='https://tmpfiles.org/dl/9678381/first.csv'
 def load_data(file_url):
     try:
         # Download the Excel file from the URL
